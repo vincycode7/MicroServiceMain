@@ -6,9 +6,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: "python main.py"
     # what ports it should run on, here it is listening to the app on port 8080 and forwarding everything to port 8080
     ports:
       - 8001:5000
+    extra_hosts:
+      - "docker.for.linux.localhost:172.17.0.1"
     # here every change made to . will be also be push to /app
     volumes:
       - .:/app
@@ -16,10 +19,20 @@ services:
     depends_on:
       - db
 
+  #  adding a queue service
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "python consumer.py"
+    depends_on:
+      - db
+
   #  adding a database service
   db:
     image: mysql:5.7.22
-    container_name: main-mysql
+    container_name:
+      main-mysql
       # db goes down sometimes this enables db to always restart when it does
     restart: always
     # adding environment variables
@@ -40,3 +53,5 @@ services:
     # so here we are mapping everything from 3306 to 33066 .
     ports:
       - 33067:3306
+    # extra_hosts:
+    #   - "docker.for.linux.localhost:$DOCKERHOST"
